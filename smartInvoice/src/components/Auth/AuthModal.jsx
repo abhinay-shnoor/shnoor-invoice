@@ -127,6 +127,7 @@ export default function AuthModal({ isOpen, onClose, onLogin, isGoogleConfigured
       if (isGoogleConfigured) {
         googleLogin()
       } else {
+        alert("Google Client ID is not configured in Vercel's environment variables. Falling back to local testing admin account.")
         // Fallback for seamless local testing
         handleAuthSuccess(adminEmail, 'admin123', 'Sang SuperAdmin', false, true)
       }
