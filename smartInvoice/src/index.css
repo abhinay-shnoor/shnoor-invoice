@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-slate-900 font-sans;
+  }
+
+  html.dark body,
+  html.theme-dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+
+  .bg-ink-950 {
+    background-color: #f8fafc !important;
+  }
+
+  .bg-ink-900 {
+    background-color: #f1f5f9 !important;
+  }
+
+  .bg-ink-800 {
+    background-color: #e2e8f0 !important;
+  }
+
+  .bg-ink-700 {
+    background-color: #cbd5e1 !important;
+  }
+
+  .text-ink-100 {
+    color: #0f172a !important;
+  }
+
+  .text-ink-200 {
+    color: #334155 !important;
+  }
+
+  .text-ink-300 {
+    color: #1e293b !important;
+  }
+
+  .text-ink-400 {
+    color: #1e293b !important;
+  }
+
+  .text-ink-500 {
+    color: #0f172a !important;
+  }
+
+
+  .border-white\/5 {
+    border-color: rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .bg-white\/3 {
+    background-color: rgba(243, 244, 246, 0.9) !important;
+  }
+
+  .dark .bg-ink-950,
+  .theme-dark .bg-ink-950 {
+    background-color: #0f172a !important;
+  }
+
+  .dark .bg-ink-900,
+  .theme-dark .bg-ink-900 {
+    background-color: #111827 !important;
+  }
+
+  .dark .bg-ink-800,
+  .theme-dark .bg-ink-800 {
+    background-color: #1f2937 !important;
+  }
+
+  .dark .bg-ink-700,
+  .theme-dark .bg-ink-700 {
+    background-color: #374151 !important;
+  }
+
+  .dark .text-ink-100,
+  .theme-dark .text-ink-100 {
+    color: #f8fafc !important;
+  }
+
+  .dark .text-ink-200,
+  .dark .text-ink-300,
+  .dark .text-ink-400,
+  .dark .text-ink-500,
+  .theme-dark .text-ink-200,
+  .theme-dark .text-ink-300,
+  .theme-dark .text-ink-400,
+  .theme-dark .text-ink-500 {
+    color: #94a3b8 !important;
+  }
+
+
+  .dark .border-white\/5,
+  .theme-dark .border-white\/5 {
+    border-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .dark .bg-white\/3,
+  .theme-dark .bg-white\/3 {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  /* Light mode adjustments for dark-themed sections */
+  .bg-gradient-to-b.from-ink-950,
+  .bg-gradient-to-r.from-ink-950 {
+    background-color: #f8fafc !important;
+  }
+
+  .bg-gradient-to-b.from-ink-950 {
+    background-image: linear-gradient(to bottom, #f8fafc, transparent) !important;
+  }
+
+  .bg-gradient-to-r.from-ink-950 {
+    background-image: linear-gradient(to right, #f1f5f9, transparent) !important;
+  }
+
+  .dark .bg-gradient-to-b.from-ink-950,
+  .theme-dark .bg-gradient-to-b.from-ink-950 {
+    background-image: linear-gradient(to bottom, rgba(15, 23, 42, 0.1), transparent) !important;
+  }
+
+  .dark .bg-gradient-to-r.from-ink-950,
+  .theme-dark .bg-gradient-to-r.from-ink-950 {
+    background-image: linear-gradient(to right, rgba(15, 23, 42, 0.2), transparent) !important;
+  }
+
+  .dark .border-white\/6,
+  .theme-dark .border-white\/6 {
+    border-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .dark .border-white\/8,
+  .theme-dark .border-white\/8 {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-200;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-400 rounded-full;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%);
+  }
+
+  .text-gradient-blue {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+  }
+
+  .theme-dark .glass,
+  .dark .glass {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(148, 163, 184, 0.3);
+  }
+
+  .glass-hover {
+    transition: all 0.3s ease;
+  }
+
+  .glass-hover:hover {
+    background: rgba(248, 250, 252, 0.9);
+    border-color: rgba(148, 163, 184, 0.5);
+  }
+
+  .theme-dark .glass-hover:hover,
+  .dark .glass-hover:hover {
+    background: rgba(30, 41, 59, 0.85);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+  }
+
+  .glow-blue-sm {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  }
+}
