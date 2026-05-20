@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { stats } from '../../data'
-import { useInView } from '../../hooks/useInView'
-import { useCounter } from '../../hooks/useCounter'
+import { useInView } from '../../Hooks/useInView'
+import { useCounter } from '../../Hooks/useCounter'
 import FadeIn from '../ui/FadeIn'
 
 function StatItem({ stat, started }) {
