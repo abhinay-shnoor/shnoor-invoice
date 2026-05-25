@@ -6,7 +6,6 @@ import ProductsTab from './features/ProductsTab';
 import CreateInvoiceTab from './features/CreateInvoiceTab';
 import InvoicesLedgerTab from './features/InvoicesLedgerTab';
 import ExpensesTab from './features/ExpensesTab';
-import AuditLogsTab from './features/AuditLogsTab';
 import AdminSettingsTab from './features/AdminSettingsTab';
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -80,7 +79,6 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
   const [clients, setClients] = useState([])
   const [items, setItems] = useState([])
   const [users, setUsers] = useState([])
-  const [auditLogs, setAuditLogs] = useState([])
   const [dbSource, setDbSource] = useState('neon-postgres')
 
   const fetchUsers = async () => {
@@ -126,7 +124,10 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
           dueDate: inv.due_date,
           amount: inv.total || 0,
           status: inv.status || 'Pending',
-          items: inv.items || []
+          items: inv.items || [],
+          amount_paid: inv.amount_paid || 0,
+          payments: inv.payments || [],
+          logs: inv.logs || []
         };
       });
 
@@ -144,15 +145,6 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
     fetchData()
   }, [])
 
-  // Sync logs to local storage temporarily (audit logs are not fully modeled yet)
-  useEffect(() => {
-    const saved = localStorage.getItem('shnoor_logs')
-    if (saved) setAuditLogs(JSON.parse(saved))
-  }, [])
-  useEffect(() => {
-    localStorage.setItem('shnoor_logs', JSON.stringify(auditLogs))
-  }, [auditLogs])
-
   // --- Real-time invoice formulation state ---
   const [invoiceForm, setInvoiceForm] = useState({
     clientName: '',
@@ -162,6 +154,38 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
     dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     items: [{ desc: '', qty: 1, rate: 0, tax: 18 }]
   })
+  
+  const [isEditingInvoice, setIsEditingInvoice] = useState(false)
+
+  const handleEditInvoice = (id) => {
+    const inv = invoices.find(i => i.id === id)
+    if (!inv) return
+    
+    setInvoiceForm({
+      id: inv.id,
+      dbId: inv.dbId,
+      clientName: inv.clientName,
+      clientEmail: inv.clientEmail,
+      clientAddress: inv.clientAddress,
+      date: inv.date,
+      dueDate: inv.dueDate,
+      items: inv.items.length > 0 ? inv.items : [{ desc: '', qty: 1, rate: 0, tax: 18 }]
+    })
+    setIsEditingInvoice(true)
+    setActiveTab('generator')
+  }
+
+  const handleCancelEditInvoice = () => {
+    setIsEditingInvoice(false)
+    setInvoiceForm({
+      clientName: '',
+      clientEmail: '',
+      clientAddress: '',
+      date: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      items: [{ desc: '', qty: 1, rate: 0, tax: 18 }]
+    })
+  }
 
   // Expense formulation state
   const [expenseForm, setExpenseForm] = useState({
@@ -194,8 +218,8 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
 
   // Log system actions helper
   const addLog = (event, type = 'info') => {
-    const time = new Date().toTimeString().split(' ')[0]
-    setAuditLogs(prev => [{ time, event, type }, ...prev])
+    const level = type === 'error' ? 'error' : type === 'success' ? 'info' : 'log'
+    console[level](`[${new Date().toISOString()}] ${type.toUpperCase()}: ${event}`)
   }
 
   // Effect to log security role mismatches
@@ -295,10 +319,8 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
 
     const payload = {
       client_id: client_id,
-      invoice_number: `INV-2026-00${invoices.length + 1}`,
       date: invoiceForm.date,
       due_date: invoiceForm.dueDate,
-      status: 'Pending',
       subtotal: subtotal,
       tax_rate: 18.0,
       tax_amount: taxAmount,
@@ -308,25 +330,47 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
     }
 
     try {
-      const response = await client.post('/invoices/', payload)
-      const inv = response.data
-
-      const newInvoice = {
-        id: inv.invoice_number,
-        dbId: inv.id,
-        clientName: invoiceForm.clientName,
-        clientEmail: invoiceForm.clientEmail,
-        clientAddress: invoiceForm.clientAddress,
-        date: inv.date,
-        dueDate: inv.due_date,
-        amount: inv.total || 0,
-        status: inv.status || 'Pending',
-        items: inv.items || []
+      if (isEditingInvoice) {
+        // Editing existing invoice
+        const response = await client.put(`/invoices/${invoiceForm.dbId}`, payload)
+        const inv = response.data
+        const updatedInvoice = {
+          id: inv.invoice_number,
+          dbId: inv.id,
+          clientName: invoiceForm.clientName,
+          clientEmail: invoiceForm.clientEmail,
+          clientAddress: invoiceForm.clientAddress,
+          date: inv.date,
+          dueDate: inv.due_date,
+          amount: inv.total || 0,
+          status: inv.status || 'Pending',
+          items: inv.items || []
+        }
+        setInvoices(invoices.map(i => i.id === updatedInvoice.id ? updatedInvoice : i))
+        addLog(`Invoice ${updatedInvoice.id} updated successfully`, 'success')
+        setIsEditingInvoice(false)
+      } else {
+        // Creating new invoice
+        payload.invoice_number = `INV-2026-00${invoices.length + 1}`
+        payload.status = 'Pending'
+        const response = await client.post('/invoices/', payload)
+        const inv = response.data
+        const newInvoice = {
+          id: inv.invoice_number,
+          dbId: inv.id,
+          clientName: invoiceForm.clientName,
+          clientEmail: invoiceForm.clientEmail,
+          clientAddress: invoiceForm.clientAddress,
+          date: inv.date,
+          dueDate: inv.due_date,
+          amount: inv.total || 0,
+          status: inv.status || 'Pending',
+          items: inv.items || []
+        }
+        setInvoices([newInvoice, ...invoices])
+        addLog(`Invoice ${newInvoice.id} created for ${newInvoice.clientName} (Total: ₹${newInvoice.amount.toLocaleString('en-IN')})`, 'success')
       }
 
-      setInvoices([newInvoice, ...invoices])
-      addLog(`Invoice ${newInvoice.id} created for ${newInvoice.clientName} (Total: ₹${newInvoice.amount.toLocaleString('en-IN')})`, 'success')
-      
       setInvoiceForm({
         clientName: '',
         clientEmail: '',
@@ -338,7 +382,7 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
       
       setActiveTab('overview')
     } catch (err) {
-      console.error("Failed to create invoice:", err)
+      console.error("Failed to save invoice:", err)
       alert("Failed to save invoice to backend.")
     }
   }
@@ -913,7 +957,7 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
     setViewingInvoice(tempInvoice)
   }
 
-  const sharedProps = { user, onLogout, adminEmail, setAdminEmail, currentRole, setCurrentRole, activeTab, setActiveTab, viewingInvoice, setViewingInvoice, invoiceTemplate, setInvoiceTemplate, invoices, setInvoices, expenses, setExpenses, clients, setClients, items, setItems, users, setUsers, auditLogs, setAuditLogs, invoiceForm, setInvoiceForm, expenseForm, setExpenseForm, clientForm, setClientForm, itemForm, setItemForm, selectedProduct, setSelectedProduct, addLog, fetchUsers, fetchData, totalInvoiced, paidInvoiced, outstandingInvoiced, totalGST, invoiceSearch, setInvoiceSearch, expenseSearch, setExpenseSearch, clientSearch, setClientSearch, itemSearch, setItemSearch, handleAddItemRow, handleRemoveItemRow, handleItemChange, handleSelectPredefinedItem, handleSelectPredefinedClient, calculateInvoiceTotal, handleCreateInvoice, handleUpdateStatus, handleDeleteInvoice, handleCreateExpense, handleCreateClient, handleDeleteClient, handleCreateItem, handleDeleteItem, toggleUserRole, handleAddUser, handlePrintSelectedInvoice, handleDownloadPDF, handlePreviewInvoice, handleDeleteUser, filteredInvoices, filteredExpenses, filteredClients, filteredItems, isAuthorized, isAdminTab, shouldRenderAccessDenied };
+  const sharedProps = { user, onLogout, adminEmail, setAdminEmail, currentRole, setCurrentRole, activeTab, setActiveTab, viewingInvoice, setViewingInvoice, invoiceTemplate, setInvoiceTemplate, invoices, setInvoices, expenses, setExpenses, clients, setClients, items, setItems, users, setUsers, invoiceForm, setInvoiceForm, expenseForm, setExpenseForm, clientForm, setClientForm, itemForm, setItemForm, selectedProduct, setSelectedProduct, addLog, fetchUsers, fetchData, totalInvoiced, paidInvoiced, outstandingInvoiced, totalGST, invoiceSearch, setInvoiceSearch, expenseSearch, setExpenseSearch, clientSearch, setClientSearch, itemSearch, setItemSearch, handleAddItemRow, handleRemoveItemRow, handleItemChange, handleSelectPredefinedItem, handleSelectPredefinedClient, calculateInvoiceTotal, handleCreateInvoice, handleUpdateStatus, handleDeleteInvoice, handleCreateExpense, handleCreateClient, handleDeleteClient, handleCreateItem, handleDeleteItem, toggleUserRole, handleAddUser, handlePrintSelectedInvoice, handleDownloadPDF, handlePreviewInvoice, handleDeleteUser, filteredInvoices, filteredExpenses, filteredClients, filteredItems, isAuthorized, isAdminTab, shouldRenderAccessDenied, isEditingInvoice, handleEditInvoice, handleCancelEditInvoice };
 
   if (currentRole === 'admin') {
     return <AdminDashboard {...sharedProps} />;

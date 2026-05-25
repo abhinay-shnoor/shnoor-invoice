@@ -48,8 +48,10 @@ let useLocalFallback = true
 
 if (connectionString) {
   console.log('⚡ Attempting to connect to Neon PostgreSQL database...')
+  // Strip ssl query param from URL — we provide ssl config explicitly as an object
+  const cleanConnectionString = connectionString.replace(/[?&]ssl=[^&]*/g, '').replace(/\?$/, '')
   pool = new pg.Pool({
-    connectionString,
+    connectionString: cleanConnectionString,
     ssl: {
       rejectUnauthorized: false // Required for Neon serverless postgres connections
     }

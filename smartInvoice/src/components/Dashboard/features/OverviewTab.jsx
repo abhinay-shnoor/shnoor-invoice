@@ -20,7 +20,7 @@ export default function OverviewTab(props) {
                       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                           <div className="flex items-center gap-2 mb-1.5">
-                            <span className="px-2 py-0.5 rounded bg-indigo-100/80 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider border border-indigo-200/20">Active Workspace</span>
+                            <span className="px-2 py-0.5 rounded bg-indigo-100/80 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider border border-indigo-200/20">Active</span>
                             {currentRole === 'admin' ? (
                               <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-450 text-[10px] font-bold uppercase tracking-wider border border-emerald-250/20">Super Admin Console</span>
                             ) : (
@@ -92,7 +92,7 @@ export default function OverviewTab(props) {
                         </div>
                       </div>
                     ) : (
-                      /* Standard User Personal Statistics View */
+                      /* Accountant Personal Statistics View */
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/40 relative overflow-hidden group hover:border-slate-350 transition duration-300">
                           <div className="absolute right-3 top-3 w-7 h-7 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-indigo-650">

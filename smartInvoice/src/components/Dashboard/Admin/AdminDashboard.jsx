@@ -14,8 +14,9 @@ import ProductsTab from '../features/ProductsTab';
 import CreateInvoiceTab from '../features/CreateInvoiceTab';
 import InvoicesLedgerTab from '../features/InvoicesLedgerTab';
 import ExpensesTab from '../features/ExpensesTab';
-import AuditLogsTab from '../features/AuditLogsTab';
 import AdminSettingsTab from '../features/AdminSettingsTab';
+
+import { useState } from 'react';
 
 export default function AdminDashboard(props) {
   const {
@@ -32,6 +33,8 @@ export default function AdminDashboard(props) {
     handlePrintSelectedInvoice, handleDeleteUser,
     filteredInvoices, filteredExpenses, filteredClients, filteredItems, isAuthorized, isAdminTab, shouldRenderAccessDenied
   } = props;
+
+
 
 
   const getSidebarItemClass = (tabId) => {
@@ -139,14 +142,6 @@ export default function AdminDashboard(props) {
               </div>
 
               <button
-                onClick={() => setActiveTab('admin_logs')}
-                className={getSidebarItemClass('admin_logs')}
-              >
-                <Terminal className="w-4 h-4 shrink-0" />
-                <span>Security Audit Logs</span>
-              </button>
-
-              <button
                 onClick={() => setActiveTab('admin_settings')}
                 className={getSidebarItemClass('admin_settings')}
               >
@@ -160,7 +155,9 @@ export default function AdminDashboard(props) {
 
         {/* Profile Card & Logout */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
-          <div className="flex items-center gap-3 mb-3">
+          <div 
+            className="flex items-center gap-3 mb-3 p-2 rounded-xl transition-colors shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+          >
             <img
               src={user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
               className="w-9 h-9 rounded-full bg-slate-200 border border-slate-300 dark:border-slate-850 shrink-0"
@@ -173,7 +170,7 @@ export default function AdminDashboard(props) {
                   ? 'bg-indigo-100 text-indigo-750 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-200/20' 
                   : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
               }`}>
-                {true ? 'Super Admin' : 'Standard User'}
+                {true ? 'Super Admin' : 'Accountant'}
               </span>
             </div>
           </div>
@@ -428,7 +425,7 @@ export default function AdminDashboard(props) {
                                     ? 'bg-indigo-100 text-indigo-750 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-200/20' 
                                     : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
                                 }`}>
-                                  {u.role === 'admin' ? 'Super Admin' : 'Standard User'}
+                                  {u.role === 'admin' ? 'Super Admin' : 'Accountant'}
                                 </span>
                               </td>
                               <td className="py-4">
@@ -468,10 +465,7 @@ export default function AdminDashboard(props) {
                   </div>
                 )}
 
-                {/* 10. SECURITY LIVE AUDIT LOGS CONSOLE */}
-                {activeTab === 'admin_logs' && isAuthorized && <AuditLogsTab {...props} />}
-
-                {/* 11. ADMIN CORE WORKSPACE SETTINGS */}
+                {/* 10. ADMIN CORE WORKSPACE SETTINGS */}
                 {activeTab === 'admin_settings' && isAuthorized && <AdminSettingsTab {...props} />}
 
               </motion.div>
@@ -668,20 +662,73 @@ export default function AdminDashboard(props) {
                 </table>
               </div>
 
-              {/* Totals Section */}
-              <div className="flex justify-end pt-2">
-                <div className="w-64 space-y-2 border-t border-slate-100 dark:border-slate-800 pt-3">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">Subtotal</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">₹{(viewingInvoice.amount / 1.18).toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+              {/* Payment History & Logs / Totals Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+                
+                {/* Left Side: Payments & Logs */}
+                <div className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-3">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2 uppercase tracking-wider">Payment History</h4>
+                    {viewingInvoice.payments && viewingInvoice.payments.length > 0 ? (
+                      <div className="space-y-2">
+                        {viewingInvoice.payments.map((pay, i) => (
+                          <div key={i} className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800 text-xs">
+                            <div>
+                              <p className="font-semibold text-slate-800 dark:text-slate-200">{pay.payment_method}</p>
+                              <p className="text-[10px] text-slate-500">{pay.payment_date} {pay.transaction_id && `• ${pay.transaction_id}`}</p>
+                            </div>
+                            <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                              +₹{pay.amount.toLocaleString('en-IN')}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic">No payments recorded yet.</p>
+                    )}
                   </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">GST (18% Included)</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">₹{(viewingInvoice.amount - (viewingInvoice.amount / 1.18)).toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2 uppercase tracking-wider mt-4">Audit Logs</h4>
+                    {viewingInvoice.logs && viewingInvoice.logs.length > 0 ? (
+                      <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
+                        {viewingInvoice.logs.map((log, i) => (
+                          <div key={i} className="flex gap-2 text-[10px] text-slate-500">
+                            <span className="font-mono text-slate-400 shrink-0">{new Date(log.created_at).toLocaleDateString()}</span>
+                            <span className="text-slate-700 dark:text-slate-300">{log.action}: {log.description}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic">No audit logs found.</p>
+                    )}
                   </div>
-                  <div className="flex justify-between items-center text-sm font-bold text-indigo-650 dark:text-indigo-400 border-t border-dashed border-slate-200 dark:border-slate-850 pt-2.5">
-                    <span>Grand Total</span>
-                    <span className="font-mono text-base">₹{viewingInvoice.amount.toLocaleString('en-IN')}</span>
+                </div>
+
+                {/* Right Side: Sticky Summary */}
+                <div className="flex justify-end pt-3 lg:pt-0">
+                  <div className="w-full max-w-[260px] space-y-2 border border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/50 dark:bg-indigo-950/20 p-4 rounded-2xl sticky top-4">
+                    <h4 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3">Invoice Summary</h4>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Subtotal</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">₹{(viewingInvoice.amount / 1.18).toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">GST (18% Included)</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">₹{(viewingInvoice.amount - (viewingInvoice.amount / 1.18)).toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-bold text-slate-800 dark:text-slate-200 border-t border-dashed border-indigo-200 dark:border-indigo-800/50 pt-2.5 mt-2.5">
+                      <span>Total Amount</span>
+                      <span className="font-mono">₹{viewingInvoice.amount.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-bold text-emerald-600 dark:text-emerald-400 border-t border-dashed border-indigo-200 dark:border-indigo-800/50 pt-2.5 mt-2.5">
+                      <span>Amount Paid</span>
+                      <span className="font-mono">₹{(viewingInvoice.amount_paid || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-base font-black text-indigo-650 dark:text-indigo-400 border-t border-indigo-200 dark:border-indigo-800 pt-2.5 mt-2.5">
+                      <span>Balance Due</span>
+                      <span className="font-mono">₹{(viewingInvoice.amount - (viewingInvoice.amount_paid || 0)).toLocaleString('en-IN')}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -716,6 +763,7 @@ export default function AdminDashboard(props) {
           </motion.div>
         </div>
       )}
+
 
     </div>
   )

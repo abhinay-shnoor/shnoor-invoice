@@ -11,7 +11,7 @@ export default function AuthModal({ isOpen, onClose, onLogin, isGoogleConfigured
   const [isLoading, setIsLoading] = useState(false)
 
   // Fullstack backend api authentication helper
-  const handleAuthSuccess = async (email, password, name, isSignUpMode = false, isGoogleAuth = false) => {
+  const handleAuthSuccess = async (email, password, name, isSignUpMode = false, isGoogleAuth = false, googlePicture = null) => {
     setIsLoading(true)
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
     try {
@@ -75,7 +75,7 @@ export default function AuthModal({ isOpen, onClose, onLogin, isGoogleConfigured
           id: user.id,
           name: user.name,
           email: user.email,
-          avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`,
+          avatar: googlePicture || user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`,
           role: user.role,
           attemptedAdmin: user.role === 'admin',
           isGoogle: isGoogleAuth,
@@ -102,7 +102,7 @@ export default function AuthModal({ isOpen, onClose, onLogin, isGoogleConfigured
       )
       if (response.ok) {
         const data = await response.json()
-        await handleAuthSuccess(data.email, 'googleoauth', data.name, false, true)
+        await handleAuthSuccess(data.email, 'googleoauth', data.name, false, true, data.picture)
       } else {
         alert("Failed to fetch Google profile.")
       }

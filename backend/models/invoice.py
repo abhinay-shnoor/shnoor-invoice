@@ -12,13 +12,17 @@ class Invoice(Base):
     invoice_number = Column(String, index=True, nullable=False)
     date = Column(Date, nullable=False)
     due_date = Column(Date)
-    status = Column(String, default="draft") # draft, sent, paid, overdue
+    status = Column(String, default="Pending") 
     subtotal = Column(Float, default=0.0)
     tax_rate = Column(Float, default=0.0)
     tax_amount = Column(Float, default=0.0)
     total = Column(Float, default=0.0)
+    amount_paid = Column(Float, default=0.0)
+    remaining_amount = Column(Float, default=0.0)
     notes = Column(String)
     items = Column(JSONB)
 
     user = relationship("User")
     client = relationship("Client")
+    payments = relationship("InvoicePayment", back_populates="invoice", cascade="all, delete-orphan")
+    logs = relationship("InvoiceLog", back_populates="invoice", cascade="all, delete-orphan")

@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CreateInvoiceTab(props) {
-  const { user, onLogout, adminEmail, setAdminEmail, currentRole, setCurrentRole, activeTab, setActiveTab, viewingInvoice, setViewingInvoice, invoiceTemplate, setInvoiceTemplate, invoices, setInvoices, expenses, setExpenses, clients, setClients, items, setItems, users, setUsers, auditLogs, setAuditLogs, invoiceForm, setInvoiceForm, expenseForm, setExpenseForm, clientForm, setClientForm, itemForm, setItemForm, selectedProduct, setSelectedProduct, addLog, fetchUsers, fetchData, totalInvoiced, paidInvoiced, outstandingInvoiced, totalGST, invoiceSearch, setInvoiceSearch, expenseSearch, setExpenseSearch, clientSearch, setClientSearch, itemSearch, setItemSearch, handleAddItemRow, handleRemoveItemRow, handleItemChange, handleSelectPredefinedItem, handleSelectPredefinedClient, calculateInvoiceTotal, handleCreateInvoice, handleUpdateStatus, handleDeleteInvoice, handleCreateExpense, handleCreateClient, handleDeleteClient, handleCreateItem, handleDeleteItem, toggleUserRole, handleAddUser, handlePrintSelectedInvoice, handleDeleteUser, filteredInvoices, filteredExpenses, filteredClients, filteredItems, isAuthorized, isAdminTab, shouldRenderAccessDenied, handlePreviewInvoice } = props;
+  const { user, onLogout, adminEmail, setAdminEmail, currentRole, setCurrentRole, activeTab, setActiveTab, viewingInvoice, setViewingInvoice, invoiceTemplate, setInvoiceTemplate, invoices, setInvoices, expenses, setExpenses, clients, setClients, items, setItems, users, setUsers, auditLogs, setAuditLogs, invoiceForm, setInvoiceForm, expenseForm, setExpenseForm, clientForm, setClientForm, itemForm, setItemForm, selectedProduct, setSelectedProduct, addLog, fetchUsers, fetchData, totalInvoiced, paidInvoiced, outstandingInvoiced, totalGST, invoiceSearch, setInvoiceSearch, expenseSearch, setExpenseSearch, clientSearch, setClientSearch, itemSearch, setItemSearch, handleAddItemRow, handleRemoveItemRow, handleItemChange, handleSelectPredefinedItem, handleSelectPredefinedClient, calculateInvoiceTotal, handleCreateInvoice, handleUpdateStatus, handleDeleteInvoice, handleCreateExpense, handleCreateClient, handleDeleteClient, handleCreateItem, handleDeleteItem, toggleUserRole, handleAddUser, handlePrintSelectedInvoice, handleDeleteUser, filteredInvoices, filteredExpenses, filteredClients, filteredItems, isAuthorized, isAdminTab, shouldRenderAccessDenied, handlePreviewInvoice, isEditingInvoice, handleCancelEditInvoice } = props;
 
   return (
     <>
@@ -21,7 +21,9 @@ export default function CreateInvoiceTab(props) {
             <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800 justify-between">
               <div className="flex items-center gap-2">
                 <Plus className="w-5 h-5 text-indigo-650" />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Formulate New Invoice</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {isEditingInvoice ? 'Edit Invoice' : 'Formulate New Invoice'}
+                </h3>
               </div>
               
               {/* Live Template Picker */}
@@ -209,6 +211,15 @@ export default function CreateInvoiceTab(props) {
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                {isEditingInvoice && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEditInvoice}
+                    className="rounded-xl border border-slate-350 dark:border-slate-800 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 px-5 py-2.5 text-xs font-bold transition text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
+                  >
+                    <X className="w-4 h-4" /> Cancel Edit
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handlePreviewInvoice}
@@ -220,7 +231,7 @@ export default function CreateInvoiceTab(props) {
                   type="submit"
                   className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500 px-6 py-2.5 text-xs font-bold transition shadow-lg shadow-indigo-500/10"
                 >
-                  Create Invoice
+                  {isEditingInvoice ? 'Update Invoice' : 'Create Invoice'}
                 </button>
               </div>
 

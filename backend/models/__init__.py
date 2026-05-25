@@ -7,3 +7,5 @@ from .item import Item
 from .timesheet import Timesheet
 from .audit_log import AuditLog
 from .tax_filing import TaxFiling
+from .invoice_payment import InvoicePayment
+from .invoice_log import InvoiceLog

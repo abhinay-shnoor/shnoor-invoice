@@ -1,7 +1,7 @@
 import asyncio
 import sys
 from database import engine, Base, AsyncSessionLocal
-from models import user, client, product, invoice, expense, item, timesheet, audit_log, tax_filing
+from models import user, client, product, invoice, expense, item, timesheet, audit_log, tax_filing, invoice_payment, invoice_log
 from models.user import User
 from utils.password import get_password_hash
 
