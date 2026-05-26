@@ -11,5 +11,9 @@ class Expense(Base):
     category = Column(String)
     amount = Column(Float, nullable=False)
     date = Column(Date, nullable=False)
+    vendor = Column(String, nullable=True)
+    payment_method = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="Pending")
 
     user = relationship("User")

@@ -5,7 +5,7 @@ from typing import List
 from database import get_db
 from models.expense import Expense
 from models.user import User
-from schemas.expense import ExpenseCreate, ExpenseResponse
+from schemas.expense import ExpenseCreate, ExpenseResponse, ExpenseUpdate
 from middleware.auth import get_current_user
 
 router = APIRouter(prefix="/api/expenses", tags=["expenses"])
@@ -20,5 +20,39 @@ async def create_expense(expense: ExpenseCreate, db: AsyncSession = Depends(get_
 
 @router.get("/", response_model=List[ExpenseResponse])
 async def get_expenses(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    result = await db.execute(select(Expense).filter(Expense.user_id == current_user.id))
+    result = await db.execute(select(Expense).filter(Expense.user_id == current_user.id).order_by(Expense.date.desc()))
     return result.scalars().all()
+
+@router.get("/{expense_id}", response_model=ExpenseResponse)
+async def get_expense(expense_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    result = await db.execute(select(Expense).filter(Expense.id == expense_id, Expense.user_id == current_user.id))
+    expense = result.scalars().first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return expense
+
+@router.put("/{expense_id}", response_model=ExpenseResponse)
+async def update_expense(expense_id: int, expense_update: ExpenseUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    result = await db.execute(select(Expense).filter(Expense.id == expense_id, Expense.user_id == current_user.id))
+    expense = result.scalars().first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    update_data = expense_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(expense, key, value)
+        
+    await db.commit()
+    await db.refresh(expense)
+    return expense
+
+@router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_expense(expense_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    result = await db.execute(select(Expense).filter(Expense.id == expense_id, Expense.user_id == current_user.id))
+    expense = result.scalars().first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+        
+    await db.delete(expense)
+    await db.commit()
+    return None

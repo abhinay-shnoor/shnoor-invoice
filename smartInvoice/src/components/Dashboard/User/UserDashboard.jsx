@@ -112,12 +112,12 @@ export default function UserDashboard(props) {
               </button>
 
               <button
-                onClick={() => setActiveTab('expenses')}
-                className={getSidebarItemClass('expenses')}
-              >
-                <Sparkles className="w-4 h-4 shrink-0 text-slate-500" />
-                <span>AI Expense Insight</span>
-              </button>
+              onClick={() => setActiveTab('expenses')}
+              className={getSidebarItemClass('expenses')}
+            >
+              <TrendingDown className="w-4 h-4 shrink-0 text-slate-500" />
+              <span>Expenses</span>
+            </button>
             </>
           )}
 
@@ -205,7 +205,7 @@ export default function UserDashboard(props) {
                 : activeTab === 'generator'
                   ? 'Create Invoice'
                   : activeTab === 'expenses' && true 
-                    ? 'AI Expense Insight' 
+                    ? 'Expense Management' 
                     : activeTab.replace('admin_', 'Admin > ').replace('tax', 'GST & Tax Reports')}
             </span>
           </div>

@@ -209,30 +209,43 @@ export default function OverviewTab(props) {
 
                         {/* Chart calculations */}
                         <div className="space-y-4 pt-1">
-                          {['Software', 'Rent', 'Meals', 'Travel'].map((cat) => {
-                            const catAmt = expenses.filter(e => e.category === cat).reduce((acc, curr) => acc + curr.amount, 0)
-                            const totalExp = expenses.reduce((acc, curr) => acc + curr.amount, 0)
-                            const pct = totalExp ? Math.round((catAmt / totalExp) * 100) : 0
+                          {(() => {
+                            const categoryTotals = expenses.reduce((acc, curr) => {
+                              const cat = curr.category || 'Others';
+                              acc[cat] = (acc[cat] || 0) + curr.amount;
+                              return acc;
+                            }, {});
+                            let topCategories = Object.entries(categoryTotals)
+                              .sort((a, b) => b[1] - a[1])
+                              .slice(0, 4)
+                              .map(e => e[0]);
                             
-                            return (
-                              <div key={cat} className="space-y-1">
-                                <div className="flex justify-between text-xs">
-                                  <span className="font-semibold text-slate-600 dark:text-slate-350">{cat}</span>
-                                  <span className="font-mono font-bold text-slate-900 dark:text-white">₹{catAmt.toLocaleString('en-IN')} ({pct}%)</span>
+                            if (topCategories.length === 0) topCategories = ['No Data'];
+
+                            return topCategories.map((cat, idx) => {
+                              const catAmt = categoryTotals[cat] || 0;
+                              const totalExp = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+                              const pct = totalExp ? Math.round((catAmt / totalExp) * 100) : 0;
+                              
+                              const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-red-500'];
+                              const colorClass = colors[idx % colors.length];
+                              
+                              return (
+                                <div key={cat} className="space-y-1">
+                                  <div className="flex justify-between text-xs">
+                                    <span className="font-semibold text-slate-600 dark:text-slate-350">{cat}</span>
+                                    <span className="font-mono font-bold text-slate-900 dark:text-white">₹{catAmt.toLocaleString('en-IN')} ({pct}%)</span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full rounded-full transition-all duration-500 ${colorClass}`}
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
                                 </div>
-                                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                  <div 
-                                    className={`h-full rounded-full transition-all duration-500 ${
-                                      cat === 'Software' ? 'bg-indigo-500' : 
-                                      cat === 'Rent' ? 'bg-emerald-500' : 
-                                      cat === 'Meals' ? 'bg-amber-500' : 'bg-red-500'
-                                    }`}
-                                    style={{ width: `${pct}%` }}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          })}
+                              )
+                            });
+                          })()}
                         </div>
                       </div>
 

@@ -190,10 +190,47 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
   // Expense formulation state
   const [expenseForm, setExpenseForm] = useState({
     title: '',
-    category: 'Software',
+    category: 'Software & APIs',
     date: new Date().toISOString().split('T')[0],
-    amount: ''
+    amount: '',
+    vendor: '',
+    paymentMethod: '',
+    notes: '',
+    status: 'Pending'
   })
+  
+  const [isEditingExpense, setIsEditingExpense] = useState(false)
+  
+  const handleEditExpense = (id) => {
+    const exp = expenses.find(e => e.id === id)
+    if (!exp) return
+    setExpenseForm({
+      id: exp.id,
+      title: exp.title,
+      category: exp.category || 'Software & APIs',
+      date: exp.date,
+      amount: exp.amount,
+      vendor: exp.vendor || '',
+      paymentMethod: exp.payment_method || '',
+      notes: exp.notes || '',
+      status: exp.status || 'Pending'
+    })
+    setIsEditingExpense(true)
+  }
+  
+  const handleCancelEditExpense = () => {
+    setIsEditingExpense(false)
+    setExpenseForm({
+      title: '',
+      category: 'Software & APIs',
+      date: new Date().toISOString().split('T')[0],
+      amount: '',
+      vendor: '',
+      paymentMethod: '',
+      notes: '',
+      status: 'Pending'
+    })
+  }
 
   // Client directory formulation state
   const [clientForm, setClientForm] = useState({
@@ -418,26 +455,53 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
     e.preventDefault()
     if (!expenseForm.title || !expenseForm.amount) return
 
-    try {
-      const response = await client.post('/expenses/', {
-        title: expenseForm.title,
-        category: expenseForm.category,
-        date: expenseForm.date,
-        amount: parseFloat(expenseForm.amount)
-      })
+    const payload = {
+      title: expenseForm.title,
+      category: expenseForm.category,
+      date: expenseForm.date,
+      amount: parseFloat(expenseForm.amount),
+      vendor: expenseForm.vendor,
+      payment_method: expenseForm.paymentMethod,
+      notes: expenseForm.notes,
+      status: expenseForm.status
+    }
 
-      setExpenses([response.data, ...expenses])
-      addLog(`Expense recorded: ${response.data.title} (₹${response.data.amount.toLocaleString('en-IN')})`, 'info')
+    try {
+      if (isEditingExpense) {
+        const response = await client.put(`/expenses/${expenseForm.id}`, payload)
+        setExpenses(expenses.map(exp => exp.id === expenseForm.id ? response.data : exp))
+        addLog(`Expense updated: ${response.data.title}`, 'success')
+        setIsEditingExpense(false)
+      } else {
+        const response = await client.post('/expenses/', payload)
+        setExpenses([response.data, ...expenses])
+        addLog(`Expense recorded: ${response.data.title} (₹${response.data.amount.toLocaleString('en-IN')})`, 'info')
+      }
       
       setExpenseForm({
         title: '',
-        category: 'Software',
+        category: 'Software & APIs',
         date: new Date().toISOString().split('T')[0],
-        amount: ''
+        amount: '',
+        vendor: '',
+        paymentMethod: '',
+        notes: '',
+        status: 'Pending'
       })
     } catch (err) {
-      console.error("Failed to create expense:", err)
+      console.error("Failed to save expense:", err)
       alert("Failed to save expense to backend.")
+    }
+  }
+
+  const handleDeleteExpense = async (id) => {
+    try {
+      await client.delete(`/expenses/${id}`)
+      setExpenses(expenses.filter(exp => exp.id !== id))
+      addLog(`Expense ${id} permanently deleted`, 'info')
+    } catch (err) {
+      console.error("Failed to delete expense:", err)
+      alert("Failed to delete expense from backend.")
     }
   }
 
@@ -957,7 +1021,7 @@ export default function Dashboard({ user, onLogout, adminEmail, setAdminEmail })
     setViewingInvoice(tempInvoice)
   }
 
-  const sharedProps = { user, onLogout, adminEmail, setAdminEmail, currentRole, setCurrentRole, activeTab, setActiveTab, viewingInvoice, setViewingInvoice, invoiceTemplate, setInvoiceTemplate, invoices, setInvoices, expenses, setExpenses, clients, setClients, items, setItems, users, setUsers, invoiceForm, setInvoiceForm, expenseForm, setExpenseForm, clientForm, setClientForm, itemForm, setItemForm, selectedProduct, setSelectedProduct, addLog, fetchUsers, fetchData, totalInvoiced, paidInvoiced, outstandingInvoiced, totalGST, invoiceSearch, setInvoiceSearch, expenseSearch, setExpenseSearch, clientSearch, setClientSearch, itemSearch, setItemSearch, handleAddItemRow, handleRemoveItemRow, handleItemChange, handleSelectPredefinedItem, handleSelectPredefinedClient, calculateInvoiceTotal, handleCreateInvoice, handleUpdateStatus, handleDeleteInvoice, handleCreateExpense, handleCreateClient, handleDeleteClient, handleCreateItem, handleDeleteItem, toggleUserRole, handleAddUser, handlePrintSelectedInvoice, handleDownloadPDF, handlePreviewInvoice, handleDeleteUser, filteredInvoices, filteredExpenses, filteredClients, filteredItems, isAuthorized, isAdminTab, shouldRenderAccessDenied, isEditingInvoice, handleEditInvoice, handleCancelEditInvoice };
+  const sharedProps = { user, onLogout, adminEmail, setAdminEmail, currentRole, setCurrentRole, activeTab, setActiveTab, viewingInvoice, setViewingInvoice, invoiceTemplate, setInvoiceTemplate, invoices, setInvoices, expenses, setExpenses, clients, setClients, items, setItems, users, setUsers, invoiceForm, setInvoiceForm, expenseForm, setExpenseForm, clientForm, setClientForm, itemForm, setItemForm, selectedProduct, setSelectedProduct, addLog, fetchUsers, fetchData, totalInvoiced, paidInvoiced, outstandingInvoiced, totalGST, invoiceSearch, setInvoiceSearch, expenseSearch, setExpenseSearch, clientSearch, setClientSearch, itemSearch, setItemSearch, handleAddItemRow, handleRemoveItemRow, handleItemChange, handleSelectPredefinedItem, handleSelectPredefinedClient, calculateInvoiceTotal, handleCreateInvoice, handleUpdateStatus, handleDeleteInvoice, handleCreateExpense, handleDeleteExpense, handleEditExpense, handleCancelEditExpense, isEditingExpense, handleCreateClient, handleDeleteClient, handleCreateItem, handleDeleteItem, toggleUserRole, handleAddUser, handlePrintSelectedInvoice, handleDownloadPDF, handlePreviewInvoice, handleDeleteUser, filteredInvoices, filteredExpenses, filteredClients, filteredItems, isAuthorized, isAdminTab, shouldRenderAccessDenied, isEditingInvoice, handleEditInvoice, handleCancelEditInvoice };
 
   if (currentRole === 'admin') {
     return <AdminDashboard {...sharedProps} />;
