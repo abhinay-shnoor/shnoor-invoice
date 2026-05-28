@@ -7,7 +7,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import clientApi from '../../../api/client';
-
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 export default function ClientRiskTab(props) {
   const { clients = [], invoices = [] } = props;
   const [searchQuery, setSearchQuery] = useState('');
@@ -165,6 +166,101 @@ export default function ClientRiskTab(props) {
   const moderateRiskCount = clientStats.filter(c => getRiskStatus(c.riskScore) === 'Moderate').length;
   const highRiskCount = clientStats.filter(c => getRiskStatus(c.riskScore) === 'High').length;
 
+  const handleExportReport = () => {
+    const doc = new jsPDF();
+    
+    // Add Company Name
+    doc.setFontSize(24);
+    doc.setTextColor(79, 70, 229); // Indigo 600 (Tailwind)
+    doc.text('Shnoor Invoice', 14, 22);
+    
+    // Add Report Title
+    doc.setFontSize(16);
+    doc.setTextColor(30, 41, 59); // Slate 800
+    doc.text('Client Risk Management Report', 14, 32);
+    
+    // Add Date
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139); // Slate 500
+    const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    doc.text(`Generated on: ${date}`, 14, 40);
+    
+    // Line separator
+    doc.setDrawColor(226, 232, 240); // Slate 200
+    doc.setLineWidth(0.5);
+    doc.line(14, 45, 196, 45);
+    
+    const tableColumn = ["Client Name", "Email", "Outstanding", "Invoices", "Overdue", "Success Rate", "Risk Status"];
+    const tableRows = [];
+
+    filteredClients.forEach(client => {
+      const clientData = [
+        client.name,
+        client.email,
+        `INR ${client.outstandingAmount.toLocaleString('en-IN')}`,
+        client.totalInvoices.toString(),
+        client.overdueDays > 0 ? `${client.overdueDays} Days` : 'On Time',
+        `${client.paymentReliability}%`,
+        getRiskStatus(client.riskScore)
+      ];
+      tableRows.push(clientData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 52,
+      theme: 'grid',
+      styles: {
+        fontSize: 9,
+        cellPadding: 5,
+      },
+      headStyles: {
+        fillColor: [79, 70, 229], // Indigo 600
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      bodyStyles: {
+        textColor: [51, 65, 85], // Slate 700
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252] // Slate 50
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        2: { halign: 'right' },
+        3: { halign: 'center' },
+        4: { halign: 'center' },
+        5: { halign: 'center' },
+        6: { halign: 'center', fontStyle: 'bold' }
+      },
+      willDrawCell: function (data) {
+        if (data.section === 'body' && data.column.index === 6) {
+          const status = data.cell.raw;
+          if (status === 'High') {
+            doc.setTextColor(220, 38, 38); // Red 600
+          } else if (status === 'Moderate') {
+            doc.setTextColor(217, 119, 6); // Amber 600
+          } else {
+            doc.setTextColor(5, 150, 105); // Emerald 600
+          }
+        }
+      },
+      didDrawPage: function (data) {
+        // Footer
+        const str = 'Page ' + doc.internal.getNumberOfPages();
+        doc.setFontSize(9);
+        doc.setTextColor(148, 163, 184); // Slate 400
+        doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 10);
+      }
+    });
+
+    doc.save('client_risk_report.pdf');
+    setToastMessage('Report downloaded successfully!');
+    setTimeout(() => setToastMessage(''), 4000);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <style>{`
@@ -182,7 +278,10 @@ export default function ClientRiskTab(props) {
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl text-sm font-bold transition shadow-sm">
+          <button 
+            onClick={handleExportReport}
+            className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl text-sm font-bold transition shadow-sm"
+          >
             <Download className="w-4 h-4" />
             Export Report
           </button>
