@@ -15,6 +15,7 @@ import CreateInvoiceTab from '../features/CreateInvoiceTab';
 import InvoicesLedgerTab from '../features/InvoicesLedgerTab';
 import ExpensesTab from '../features/ExpensesTab';
 import AdminSettingsTab from '../features/AdminSettingsTab';
+import ClientRiskTab from '../features/ClientRiskTab';
 
 import { useState } from 'react';
 
@@ -85,6 +86,7 @@ export default function AdminDashboard(props) {
             <span>Client Directory</span>
           </button>
 
+
           {false && (
             <>
               <button
@@ -116,6 +118,14 @@ export default function AdminDashboard(props) {
                 className={getSidebarItemClass('expenses')}
               >
                 <TrendingDown className="w-4 h-4 shrink-0" /> Expenses
+              </button>
+
+              <button
+                onClick={() => setActiveTab('client_risk')}
+                className={getSidebarItemClass('client_risk')}
+              >
+                <ShieldAlert className="w-4 h-4 shrink-0 text-slate-500" />
+                <span>Client Risk</span>
               </button>
             </>
           )}
@@ -193,6 +203,7 @@ export default function AdminDashboard(props) {
             <span className="text-xs font-bold text-slate-700 dark:text-slate-300 capitalize font-mono flex items-center gap-1.5">
               {activeTab === 'overview' && <LayoutDashboard className="w-3.5 h-3.5 text-indigo-650" />}
               {activeTab === 'clients' && <Building2 className="w-3.5 h-3.5 text-indigo-650" />}
+              {activeTab === 'client_risk' && <ShieldAlert className="w-3.5 h-3.5 text-indigo-650" />}
               {activeTab === 'items' && <Layers className="w-3.5 h-3.5 text-indigo-650" />}
               {activeTab === 'generator' && <Plus className="w-3.5 h-3.5 text-indigo-650" />}
               {activeTab === 'invoices' && <History className="w-3.5 h-3.5 text-indigo-650" />}
@@ -203,9 +214,11 @@ export default function AdminDashboard(props) {
                 ? 'Products' 
                 : activeTab === 'generator'
                   ? 'Create Invoice'
-                  : activeTab === 'expenses' && false 
-                    ? 'Expense Management' 
-                    : activeTab === 'expenses' ? 'Expense Management' : activeTab.replace('admin_', 'Admin > ').replace('tax', 'GST & Tax Reports')}
+                  : activeTab === 'client_risk'
+                    ? 'Client Risk Management'
+                    : activeTab === 'expenses' && false 
+                      ? 'Expense Management' 
+                      : activeTab === 'expenses' ? 'Expense Management' : activeTab.replace('admin_', 'Admin > ').replace('tax', 'GST & Tax Reports')}
             </span>
           </div>
 
@@ -280,6 +293,9 @@ export default function AdminDashboard(props) {
 
                 {/* 2. CUSTOMER CLIENTS DIRECTORY */}
                 {activeTab === 'clients' && <ClientsTab {...props} />}
+
+                {/* 3. CLIENT RISK */}
+                {activeTab === 'client_risk' && <ClientRiskTab {...props} />}
 
                 {activeTab === 'items' && <ProductsTab {...props} />}
 
